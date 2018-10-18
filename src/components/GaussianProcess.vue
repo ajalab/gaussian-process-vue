@@ -1,10 +1,11 @@
 <template>
     <div>
-      <svg :width="width" :height="height" @click="addPoint">
+      <svg :width="width" :height="height" @click="addPoint" @mouseenter="showCursorPos = true" @mouseleave="showCursorPos = false" @mousemove="setCursorPos">
           <line x1=0 :y1="viewPort.yorig" :x2="width" :y2="viewPort.yorig" stroke="#333" stroke-width="1px" shape-rendering="crispEdges"/>
           <line :x1="viewPort.xorig" y1="0" :x2="viewPort.xorig" :y2="height" stroke="#333" stroke-width="1px" shape-rendering="crispEdges"/>
           <PredictionCurve :x="prediction.x" :y="prediction.y" :e="prediction.e" :viewPort="viewPort" />
           <circle v-for="p in viewPoints" r="2" :cx="p.x" :cy="p.y" :key="p.id"/>
+          <text x="10" y="30">{{cursorPosStr}}</text>
       </svg>
       <p>
         <label>h: <input type="number" v-model="h"/></label>
@@ -50,9 +51,19 @@ export default class GaussoianProcess extends Vue {
   private beta: number = 30;
   private N: number = 100;
 
+  private cursor: Point = { x: 0, y: 0 };
+  private showCursorPos: boolean = false;
+
   private addPoint(event: MouseEvent) {
     const [x, y] = this.viewPort.actual(event.offsetX, event.offsetY);
     this.points.push({ x, y });
+  }
+
+  private setCursorPos(event: MouseEvent) {
+    [this.cursor.x, this.cursor.y] = this.viewPort.actual(
+      event.offsetX,
+      event.offsetY
+    );
   }
 
   get viewPoints(): Point[] {
@@ -60,6 +71,13 @@ export default class GaussoianProcess extends Vue {
       const [x, y] = this.viewPort.view(p.x, p.y);
       return { x, y, id };
     });
+  }
+
+  get cursorPosStr(): string {
+    if (this.showCursorPos) {
+      return `x: ${this.cursor.x.toFixed(4)} y: ${this.cursor.y.toFixed(4)}`;
+    }
+    return "";
   }
 
   get prediction(): Prediction {
