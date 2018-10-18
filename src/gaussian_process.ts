@@ -58,6 +58,38 @@ function solve(l: Float64Array, b: Float64Array) {
     return x;
 }
 
+function inv(l: Float64Array, n: number): Float64Array {
+    const r = new Float64Array(n * n);
+    for (let i = 0; i < n; i++) {
+        const e = new Float64Array(n);
+        e[i] = 1;
+        const y = solveForward(l, e);
+        const x = solveBackward(l, y);
+        for (let j = 0; j < n; j++) {
+            r[n * j + i] = x[j];
+        }
+    }
+    return r;
+}
+
+function sub(x: Float64Array, y: Float64Array): Float64Array {
+    return x.map((v, i) => v - y[i]);
+}
+
+function mul(x: Float64Array, y: Float64Array, n: number): Float64Array {
+    const r = new Float64Array(n * n);
+    for (let i = 0; i < n; i++) {
+        for (let j = 0; j < n; j++) {
+            let s = 0;
+            for (let k = 0; k < n; k++) {
+                s += x[n * i + k] * y[n * k + j];
+            }
+            r[n * i + j] = s;
+        }
+    }
+    return r;
+}
+
 function dot(x: Float64Array, y: Float64Array): number {
     const n = x.length;
 
@@ -73,7 +105,12 @@ function kernel(x1: number, x2: number, h: number) {
     return Math.exp(d * d / -h);
 }
 
-export function regression(
+function dkernel(x1: number, x2: number, h: number) {
+    const d = x1 - x2;
+    return Math.exp(d * d / -h) * (d * d) / (h * h);
+}
+
+export function predict(
     x: Float64Array,
     y: Float64Array,
     xt: Float64Array,
@@ -104,4 +141,41 @@ export function regression(
     }
 
     return [mu, sigma];
+}
+
+export function optimize(
+    x: Float64Array,
+    y: Float64Array,
+    beta: number = 30,
+    m = 100,
+    learning_rate: number = 0.05,
+): number {
+    const n = x.length;
+    let h = 1;
+    for (let t = 0; t < m; t++) {
+        const c = new Float64Array(n * n);
+        const dc = new Float64Array(n * n);
+        for (let i = 0; i < n; i++) {
+            for (let j = 0; j < n; j++) {
+                c[n * i + j] = kernel(x[i], x[j], h) + (i === j ? 1.0 / beta : 0);
+                dc[n * i + j] = dkernel(x[i], x[j], h);
+            }
+        }
+        const l = cholesky(c, n);
+        const a = solve(l, y);
+        const aa = new Float64Array(n * n);
+        for (let i = 0; i < n; i++) {
+            for (let j = 0; j < n; j++) {
+                aa[n * i + j] = a[i] * a[j];
+            }
+        }
+        const cinv = inv(l, n);
+        const m = mul(sub(aa, cinv), dc, n);
+        let tr = 0;
+        for (let i = 0; i < n; i++) {
+            tr = tr + m[n * i + i];
+        }
+        h = h + tr * learning_rate;
+    }
+    return h;
 }
