@@ -1,7 +1,3 @@
-export class Point {
-    constructor(public x: number, public y: number, public id: number) { }
-}
-
 export class ViewPort {
     constructor(
         public width: number,
