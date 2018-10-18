@@ -21,17 +21,17 @@ import PredictionCurve from "./PredictionCurve.vue";
 import { regression } from "@/gaussian_process";
 import { ViewPort } from "@/util";
 
-type Prediction = {
+interface Prediction {
   x: Float64Array;
   y: Float64Array;
   e: Float64Array;
-};
+}
 
-type Point = {
+interface Point {
   x: number;
   y: number;
   id?: number;
-};
+}
 
 @Component({
   components: {
