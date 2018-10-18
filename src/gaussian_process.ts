@@ -100,21 +100,21 @@ function dot(x: Float64Array, y: Float64Array): number {
     return s;
 }
 
-function kernel(x1: number, x2: number, h: number) {
+function kernel(x1: number, x2: number, t: number) {
     const d = x1 - x2;
-    return Math.exp(d * d / -h);
+    return Math.exp(d * d * -t);
 }
 
-function dkernel(x1: number, x2: number, h: number) {
+function dkernel(x1: number, x2: number, t: number) {
     const d = x1 - x2;
-    return Math.exp(d * d / -h) * (d * d) / (h * h);
+    return -Math.exp(d * d * -t) * (d * d);
 }
 
 export function predict(
     x: Float64Array,
     y: Float64Array,
     xt: Float64Array,
-    h: number = 3,
+    t: number = 3,
     beta: number = 30
 ): [Float64Array, Float64Array] {
 
@@ -122,7 +122,7 @@ export function predict(
     const c = new Float64Array(n * n);
     for (let i = 0; i < n; i++) {
         for (let j = 0; j < n; j++) {
-            c[n * i + j] = kernel(x[i], x[j], h) + (i === j ? 1.0 / beta : 0);
+            c[n * i + j] = kernel(x[i], x[j], t) + (i === j ? 1.0 / beta : 0);
         }
     }
     const l = cholesky(c, n);
@@ -133,11 +133,11 @@ export function predict(
     for (let j = 0; j < m; j++) {
         const k = new Float64Array(n);
         for (let i = 0; i < n; i++) {
-            k[i] = kernel(x[i], xt[j], h);
+            k[i] = kernel(x[i], xt[j], t);
         }
         const v = solveForward(l, k);
         mu[j] = dot(k, a);
-        sigma[j] = kernel(xt[j], xt[j], h) + 1.0 / beta - dot(v, v);
+        sigma[j] = kernel(xt[j], xt[j], t) + 1.0 / beta - dot(v, v);
     }
 
     return [mu, sigma];
@@ -151,14 +151,14 @@ export function optimize(
     learning_rate: number = 0.05,
 ): number {
     const n = x.length;
-    let h = 1;
-    for (let t = 0; t < m; t++) {
+    let t = 1;
+    for (let k = 0; k < m; k++) {
         const c = new Float64Array(n * n);
         const dc = new Float64Array(n * n);
         for (let i = 0; i < n; i++) {
             for (let j = 0; j < n; j++) {
-                c[n * i + j] = kernel(x[i], x[j], h) + (i === j ? 1.0 / beta : 0);
-                dc[n * i + j] = dkernel(x[i], x[j], h);
+                c[n * i + j] = kernel(x[i], x[j], t) + (i === j ? 1.0 / beta : 0);
+                dc[n * i + j] = dkernel(x[i], x[j], t);
             }
         }
         const l = cholesky(c, n);
@@ -175,7 +175,7 @@ export function optimize(
         for (let i = 0; i < n; i++) {
             tr = tr + m[n * i + i];
         }
-        h = h + tr * learning_rate;
+        t = t + tr * learning_rate;
     }
-    return h;
+    return t;
 }

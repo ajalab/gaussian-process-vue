@@ -8,7 +8,7 @@
           <text x="10" y="30">{{cursorPosStr}}</text>
       </svg>
       <p>
-        <label>h: <input type="number" v-model="h"/></label>
+        <label>t: <input type="number" v-model="t"/></label>
         <label>β: <input type="number" v-model="beta"/></label>
         <input type="button" value="clear" @click="points = []"/>
         <input type="button" value="optimize" @click="optimization"/>
@@ -45,12 +45,12 @@ export default class GaussoianProcess extends Vue {
   @Prop()
   private height!: number;
 
-  private viewPort: ViewPort = new ViewPort(this.width, this.height, 30, 30);
+  private viewPort: ViewPort = new ViewPort(this.width, this.height, 100, 100);
   private points: Point[] = [];
 
-  private h: number = 3;
+  private t: number = 3;
   private beta: number = 30;
-  private N: number = 100;
+  private N: number = 200;
 
   private cursor: Point = { x: 0, y: 0 };
   private showCursorPos: boolean = false;
@@ -96,7 +96,7 @@ export default class GaussoianProcess extends Vue {
       x[i] = this.points[i].x;
       y[i] = this.points[i].y;
     }
-    const [mu, sig] = predict(x, y, xt, this.h, this.beta);
+    const [mu, sig] = predict(x, y, xt, this.t, this.beta);
 
     return {
       x: xt,
@@ -113,9 +113,9 @@ export default class GaussoianProcess extends Vue {
       x[i] = this.points[i].x;
       y[i] = this.points[i].y;
     }
-    const h = optimize(x, y, this.beta, 100, 0.1);
-    if (!isNaN(h)) {
-      this.h = h;
+    const t = optimize(x, y, this.beta, 100, 0.1);
+    if (!isNaN(t)) {
+      this.t = t;
     } else {
       console.warn("failed to perform optimization");
     }
