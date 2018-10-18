@@ -1,4 +1,4 @@
-# gaussian-process-ts
+# gaussian-process-vue
 
 ## Project setup
 ```
