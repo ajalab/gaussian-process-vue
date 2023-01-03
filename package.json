@@ -13,9 +13,9 @@
     "vue-property-decorator": "^8.2.0"
   },
   "devDependencies": {
-    "@vue/cli-plugin-babel": "^3.9.0",
+    "@vue/cli-plugin-babel": "^5.0.8",
     "@vue/cli-plugin-typescript": "^3.9.0",
-    "@vue/cli-service": "^3.9.0",
+    "@vue/cli-service": "^5.0.8",
     "typescript": "^3.5.0",
     "vue-template-compiler": "^2.6.0"
   }
